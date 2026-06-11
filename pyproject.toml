@@ -1,0 +1,14 @@
+[project]
+name = "video-face-reference-builder"
+version = "0.1.0"
+description = "Build traceable face reference assets from partial face videos."
+requires-python = ">=3.9"
+dependencies = [
+  "opencv-python",
+  "Pillow",
+  "numpy",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
