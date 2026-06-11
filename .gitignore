@@ -9,6 +9,7 @@ venv/
 
 outputs/
 案例/
+third_party/
 
 *.mp4
 *.mov

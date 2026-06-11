@@ -47,6 +47,5 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(len(list((run_dir / "frames").glob("*.jpg"))), 4)
             self.assertEqual(len(list((run_dir / "best_frames").glob("*.jpg"))), 3)
 
-
 if __name__ == "__main__":
     unittest.main()
