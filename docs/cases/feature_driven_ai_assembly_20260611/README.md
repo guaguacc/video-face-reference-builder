@@ -8,6 +8,7 @@ It is not a final identity reconstruction. The complete face result contains AI-
 
 | Asset | Path | Role |
 | --- | --- | --- |
+| Overview | `assets/feature_result_overview.png` | Compact GitHub preview with feature pack on the left and generated result on the right |
 | Selected keyframes sheet | `assets/selected_keyframes.jpg` | First-stage selected original video frames |
 | Primary scaffold | `assets/primary_scaffold_selected_003.jpg` | Most complete original face frame used for layout and face shape |
 | Strong feature pack | `assets/strong_feature_reference_pack.jpg` | Hard local references for face shape, eyes, nose, philtrum, mouth, cheek/skin |

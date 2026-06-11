@@ -24,13 +24,15 @@ OpenCV is used for video/frame IO and deterministic scoring. It is not used to s
 
 ## Example Result
 
-![Feature-driven face result](docs/cases/feature_driven_ai_assembly_20260611/assets/result_feature_driven.png)
+<img src="docs/cases/feature_driven_ai_assembly_20260611/assets/feature_result_overview.png" alt="Feature pack and generated review result" width="760">
 
 Case assets:
 
+- [Overview](docs/cases/feature_driven_ai_assembly_20260611/assets/feature_result_overview.png)
 - [Selected keyframes](docs/cases/feature_driven_ai_assembly_20260611/assets/selected_keyframes.jpg)
 - [Primary original scaffold](docs/cases/feature_driven_ai_assembly_20260611/assets/primary_scaffold_selected_003.jpg)
 - [Strong feature pack](docs/cases/feature_driven_ai_assembly_20260611/assets/strong_feature_reference_pack.jpg)
+- [Generated result](docs/cases/feature_driven_ai_assembly_20260611/assets/result_feature_driven.png)
 - [Review sheet](docs/cases/feature_driven_ai_assembly_20260611/assets/feature_pack_vs_result_review_clear.png)
 
 ## Documentation
