@@ -1,8 +1,8 @@
 # Feature-Driven AI Assembly Case - 2026-06-11
 
-This case records a lightweight example of the feature-driven full-face candidate flow.
+This case records a lightweight example of the feature-driven full-face result flow.
 
-It is not a final identity reconstruction. The complete face candidate contains AI-inferred regions and should only be used for workflow review.
+It is not a final identity reconstruction. The complete face result contains AI-inferred regions and should only be used for workflow review.
 
 ## Case Assets
 
@@ -11,17 +11,16 @@ It is not a final identity reconstruction. The complete face candidate contains 
 | Selected keyframes sheet | `assets/selected_keyframes.jpg` | First-stage selected original video frames |
 | Primary scaffold | `assets/primary_scaffold_selected_003.jpg` | Most complete original face frame used for layout and face shape |
 | Strong feature pack | `assets/strong_feature_reference_pack.jpg` | Hard local references for face shape, eyes, nose, philtrum, mouth, cheek/skin |
-| Generated result 04 | `assets/ai_assembled_candidate_04_feature_driven.png` | Feature-driven full-face AI result for this round |
-| Review sheet | `assets/feature_pack_vs_result_04_review_clear.png` | Clear side-by-side check: feature pack vs generated result 04 |
-| Legacy review sheet | `assets/feature_pack_vs_candidate_04_review.jpg` | Earlier JPG review sheet kept for traceability; text is blurrier due to small bitmap labels and JPEG scaling |
+| Generated result | `assets/result_feature_driven.png` | Feature-driven full-face AI result |
+| Review sheet | `assets/feature_pack_vs_result_review_clear.png` | Clear side-by-side check: feature pack vs generated result |
 
 ## Workflow Summary
 
 1. Treat keyframe selection as complete and keep original frames as primary evidence.
 2. Use `selected_003_t_00039.000.jpg` as the face-shape and layout scaffold.
 3. Build a strong local feature pack from the previously AI-curated slices.
-4. Use the `imagegen` skill with a hard-constrained prompt to generate result 04.
-5. Review whether result 04 actually preserves mouth, philtrum, nose, eye, cheek, and skin cues from the feature pack.
+4. Use the `imagegen` skill with a hard-constrained prompt to generate the result.
+5. Review whether the result actually preserves mouth, philtrum, nose, eye, cheek, and skin cues from the feature pack.
 
 ## Important Constraint
 
@@ -29,7 +28,7 @@ The scaffold must come from the most complete original keyframe. Do not use a pr
 
 ## Review Result
 
-Result 04 is better than candidate 03 because it uses the mouth, philtrum, and nose slices more visibly. It is still not final:
+The generated result uses the mouth, philtrum, and nose slices more visibly than the previous generic AI attempt. It is still not final:
 
 - the missing eye is AI-inferred;
 - hair and full outline are heavily inferred;
@@ -41,5 +40,5 @@ Result 04 is better than candidate 03 because it uses the mouth, philtrum, and n
 See:
 
 ```text
-../../candidate_04_feature_driven_flow.md
+../../result_feature_driven_flow.md
 ```

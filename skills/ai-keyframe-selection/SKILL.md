@@ -1,6 +1,6 @@
 ---
 name: ai-keyframe-selection
-description: Use when selecting face-reference keyframes from a video, especially when replacing manual visual review with an AI-assisted process that must search the whole video first, then refine promising time windows without losing global coverage.
+description: Use when selecting face-reference keyframes from a video or reproducing the feature-driven full-face result workflow from this repo. Covers full-video keyframe sweep, optional CodeFormer reference handling, AI-curated local face crops, strong feature-pack construction, and imagegen-based generated result assembly.
 ---
 
 # AI Keyframe Selection
@@ -10,6 +10,12 @@ description: Use when selecting face-reference keyframes from a video, especiall
 Select face-reference keyframes from a difficult video where no single frame contains a complete, clean face.
 
 This skill replaces manual review with an AI-assisted workflow. It must not hard-code known good timestamps from a prior case. It must search the full video first, then refine promising time windows.
+
+It also records the repo workflow for creating a feature-driven generated full-face result from selected keyframes. For the detailed result-04 reproduction sequence and prompt, read:
+
+```text
+references/feature_driven_assembly.md
+```
 
 ## Core Rule
 
@@ -25,6 +31,8 @@ The final output should include both:
 
 - globally discovered candidate frames
 - refined frames from high-value windows around those candidates
+
+Generated full-face results must not replace video evidence. Treat them as AI-inferred result artifacts with traceable inputs.
 
 ## Inputs
 
@@ -49,6 +57,16 @@ keyframe_selection/
   contact_sheets/
   keyframe_selection.json
   keyframe_selection.md
+```
+
+For generated result workflows, also create:
+
+```text
+candidate_guided_composite/
+  ai_assembly_round_01/
+    strong_feature_reference_pack.jpg
+    result_feature_driven.png
+    feature_pack_vs_result_review_clear.png
 ```
 
 The report must include:
@@ -176,6 +194,32 @@ Write `keyframe_selection.md` with:
 - limitations
 
 The report must state when the final frames came from a globally discovered window, and when they came from non-window singleton candidates.
+
+## After Keyframe Selection: Feature-Driven Generated Result
+
+Use this only after keyframe selection is complete.
+
+Required order:
+
+```text
+selected original keyframes
+-> optional CodeFormer/GFPGAN auxiliary reference
+-> AI-curated local crops and crop boards
+-> strong feature reference pack
+-> imagegen generated result
+-> review sheet
+```
+
+Rules:
+
+- The scaffold must be the most complete original keyframe, not an AI-generated full face.
+- CodeFormer outputs are auxiliary references only; keep all original selected keyframes.
+- Large contact sheets are weak as imagegen references. Build a small hard-reference feature pack from local slices.
+- OpenCV is part of the base keyframe pipeline for video/frame IO and deterministic scoring. Do not add non-main experiment steps to the generated-result reproduction path.
+- The generated result was created by `imagegen` from the original scaffold and strong feature pack; it was not assembled by OpenCV.
+- Preserve uncertainty: mouth/nose/philtrum can be tied to slices; missing eye, hair, full face outline, and complete symmetry are AI-inferred.
+
+When asked to reproduce the current generated-result flow, load `references/feature_driven_assembly.md` and follow its commands and prompt.
 
 ## Failure Modes
 
