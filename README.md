@@ -52,5 +52,21 @@ outputs/<run_id>/
 - 嘴部/人中/鼻部区域裁切
 - 脸型轮廓估计
 - 近距离透视/镜头畸变校正
-- CodeFormer/GFPGAN 自动调用
+- CodeFormer/GFPGAN 可选增强对照自动调用
 - 候选完整脸局部校正
+
+### Candidate 04 AI 复合记录
+
+当前案例的完整脸候选 04 使用“强特征包驱动”流程：先从局部切片中挑出嘴、鼻、人中、眼、脸型等强参考，拼成 feature pack，再通过 `imagegen` skill 生成完整脸候选。
+
+复现记录和完整 prompt：
+
+```text
+docs/candidate_04_feature_driven_flow.md
+```
+
+重建强特征包：
+
+```bash
+.venv/bin/python scripts/build_strong_feature_reference_pack_case.py
+```

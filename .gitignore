@@ -10,6 +10,7 @@ venv/
 outputs/
 案例/
 third_party/
+models/
 
 *.mp4
 *.mov

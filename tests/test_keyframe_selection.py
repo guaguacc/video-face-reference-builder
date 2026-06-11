@@ -112,6 +112,5 @@ class KeyframeSelectionTests(unittest.TestCase):
 
             self.assertGreaterEqual(result["windows"][0]["start"], 2.0)
 
-
 if __name__ == "__main__":
     unittest.main()

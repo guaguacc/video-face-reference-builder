@@ -1,0 +1,128 @@
+# Candidate 04 Feature-Driven AI Assembly Flow
+
+This note records the exact workflow used for `ai_assembled_candidate_04_feature_driven.png`.
+
+## Goal
+
+Generate a complete full-face candidate while forcing the model to use the previously extracted local face slices as feature evidence, instead of producing a generic clean selfie.
+
+The result is a review candidate only. It is not treated as ground-truth identity evidence.
+
+## Skill
+
+- Skill used: `imagegen`
+- Mode used: built-in image generation tool
+- Use case: `compositing`
+- Asset type: full-face reconstruction candidate using hard local feature references
+
+## Evidence Inputs
+
+Primary original frame:
+
+```text
+outputs/keyframe_selection_case/selected_keyframes/selected_003_t_00039.000.jpg
+```
+
+Feature reference pack:
+
+```text
+outputs/keyframe_selection_case/candidate_guided_composite/ai_assembly_round_01/strong_feature_reference_pack.jpg
+```
+
+The feature pack was built from AI-curated crop outputs:
+
+```text
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/face_shape/selected_003_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/face_shape/selected_004_t_00038.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/eye/selected_003_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/eye/selected_011_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/nose/selected_003_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/nose/selected_008_t_00039.500.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/philtrum/selected_003_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/philtrum/selected_008_t_00039.500.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/mouth/selected_003_t_00039.000.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/mouth/selected_008_t_00039.500.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/mouth/selected_006_t_00048.500.jpg
+outputs/keyframe_selection_case/local_reference/ai_curated_crops/cheek_skin/selected_003_t_00039.000.jpg
+```
+
+## Feature Pack Construction
+
+The feature pack groups a small number of high-value local slices into a single hard-reference board:
+
+- `FACE SHAPE anchor`
+- `FACE SHAPE side`
+- `EYE anchor`
+- `EYE soft lid`
+- `NOSE anchor`
+- `NOSE nostril/side`
+- `PHILTRUM anchor`
+- `PHILTRUM alt`
+- `MOUTH anchor`
+- `MOUTH frontal`
+- `MOUTH side alt`
+- `CHEEK/SKIN`
+
+Reason: large contact sheets are too weak as references. The model tends to read them as general style/context and falls back to a generic face. The feature pack makes the local organs visually dominant before generation.
+
+## Prompt
+
+```text
+Use case: compositing
+Asset type: full-face reconstruction candidate using hard local feature references
+
+Input images visible in this conversation:
+Image 1: strong feature reference pack. This is the primary evidence pack and must drive the organ features. It contains labeled local crops: FACE SHAPE anchor/side, EYE anchor/soft lid, NOSE anchor/nostril side, PHILTRUM anchor/alt, MOUTH anchor/frontal/side alt, and CHEEK/SKIN.
+Image 2: selected_003 original keyframe. This is the main face-layout anchor for cheek fullness, close-camera distortion, approximate organ spacing, skin color, hair boundary, and video softness.
+Previous candidate 03 visible in conversation: use only as a warning example of what is too generic and too polished. Do not copy its clean selfie style.
+
+Primary request: Generate one complete face reconstruction candidate, but make the local organs visibly derived from Image 1's feature pack. Use the feature pack as hard evidence: the mouth must resemble the MOUTH anchor/frontal crops, the nose must resemble the NOSE anchor/nostril-side crops, the philtrum must keep the short soft transition and bright highlight from the PHILTRUM crops, and the eyes must preserve the narrow soft eyelid style from the EYE crops.
+
+Assembly rule:
+- First place the approximate face shape, cheek volume, crop perspective, and hair boundary from Image 2.
+- Then insert/fit the local components from Image 1: eye shape, nose, philtrum, mouth, cheek/skin tone.
+- Only after placing these components, infer the missing half of the face conservatively so the output becomes a complete face.
+- The missing side may be inferred by symmetry and neighboring-frame logic, but it must stay consistent with the feature pack, not with a generic beauty portrait.
+
+Composition:
+- Single full-face vertical portrait candidate.
+- Complete face visible: both eyes, full nose, philtrum, full mouth, cheeks, chin, and dark hair framing.
+- Keep close phone-video perspective, slight off-angle, rounded/full cheek impression, soft low-resolution texture, and mild compression blur.
+
+Hard feature constraints:
+- Mouth: modest natural lips, soft pink-red color, slightly V-shaped upper lip contour as seen in the mouth crops; no glossy enlarged lips.
+- Nose: small soft nose, low-detail blurred bridge/tip, nostril placement suggested by the nose crops; no sharp sculpted nose.
+- Philtrum: short, soft, with the pale vertical highlight/transition visible in the crops; do not replace with a clean model philtrum.
+- Eyes: narrow, soft eyelids, dark eye opening, blurred brow/eyelid relationship; no sharp lashes, no large bright eyes.
+- Cheeks/skin: rounded cheek, pink flush, smooth phone-video blur; no pore-level detail or studio skin.
+
+Avoid:
+- Do not make another clean AI selfie like candidate 03.
+- Do not beautify, glamorize, add makeup, sharpen hair, sharpen eyebrows, or create a model-like symmetric face.
+- Do not ignore the feature pack. The generated mouth/nose/philtrum/eye shapes should visibly echo the labeled crops.
+- No text, labels, landmark dots, collage, borders, UI overlay, or watermark.
+
+Output: one complete full-face candidate reconstruction for review only. The local components should clearly come from the provided crop evidence, while missing regions are AI-inferred conservatively.
+```
+
+## Outputs
+
+```text
+outputs/keyframe_selection_case/candidate_guided_composite/ai_assembly_round_01/ai_assembled_candidate_04_feature_driven.png
+outputs/keyframe_selection_case/candidate_guided_composite/ai_assembly_round_01/ai_assembly_review_feature_pack_vs_candidate_04.jpg
+```
+
+## Review Notes
+
+Candidate 04 uses the slice evidence better than candidate 03:
+
+- Mouth and philtrum are closer to the local crop evidence.
+- Nose wing and nostril area are softer and less sculpted.
+- The full face is still partly inferred by AI, especially the missing eye, hair, and full outline.
+- It remains too much like a clean natural selfie for final use.
+
+Next recommended step:
+
+```text
+Use candidate 04 as a temporary full-face base, then run localized masked edits for mouth, nose/philtrum, and eyes separately against the feature pack.
+```
