@@ -1,9 +1,9 @@
 ---
-name: ai-keyframe-selection
-description: Use when selecting face-reference keyframes from a video or reproducing the feature-driven full-face result workflow from this repo. Covers full-video keyframe sweep, optional CodeFormer reference handling, AI-curated local face crops, strong feature-pack construction, and imagegen-based generated result assembly.
+name: video-face-reference-builder
+description: Use when building traceable face-reference assets from a difficult partial-face video. Covers full-video keyframe sweep, optional CodeFormer reference handling, AI-curated local face crops, strong feature-pack construction, and imagegen-based generated result assembly.
 ---
 
-# AI Keyframe Selection
+# Video Face Reference Builder
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Select face-reference keyframes from a difficult video where no single frame con
 
 This skill replaces manual review with an AI-assisted workflow. It must not hard-code known good timestamps from a prior case. It must search the full video first, then refine promising time windows.
 
-It also records the repo workflow for creating a feature-driven generated full-face result from selected keyframes. For the detailed result-04 reproduction sequence and prompt, read:
+It also records the repo workflow for creating a feature-driven generated full-face result from selected keyframes. For the detailed generated-result sequence and prompt, read:
 
 ```text
 references/feature_driven_assembly.md

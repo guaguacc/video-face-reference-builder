@@ -1,72 +1,52 @@
 # Video Face Reference Builder
 
-从非配合、近距离、局部遮挡的人脸视频中提取可追溯的人脸参考信息。
+An implementation for building traceable face-reference assets from a difficult, close-range, partial-face video.
 
-第一阶段目标是建立可复现的本地处理管线：
+The project keeps original video frames as the evidence base. AI-generated images are review artifacts, not ground truth.
 
-- 读取视频信息
-- 抽帧
-- 计算基础质量分
-- 生成最佳帧参考板
-- 输出处理报告
+## Implemented Method
 
-完整需求见 `需求规格.md`，阶段计划见 `实施计划.md`。
+```text
+video
+-> global frame sampling
+-> deterministic frame scoring
+-> contact sheets
+-> AI-assisted keyframe review
+-> dense sampling around useful windows
+-> selected original keyframes
+-> optional CodeFormer/GFPGAN reference comparison
+-> AI-curated local face crops
+-> strong feature reference pack
+-> imagegen full-face review result
+```
 
-## 本地环境
+OpenCV is used for video/frame IO and deterministic scoring. It is not used to stitch the final face result.
 
-本地项目目录包含 `.venv/`，用于运行当前第一阶段代码。该目录体积较大，不提交到 Git。
+## Example Result
 
-运行测试：
+![Feature-driven face result](docs/cases/feature_driven_ai_assembly_20260611/assets/result_feature_driven.png)
+
+Case assets:
+
+- [Selected keyframes](docs/cases/feature_driven_ai_assembly_20260611/assets/selected_keyframes.jpg)
+- [Primary original scaffold](docs/cases/feature_driven_ai_assembly_20260611/assets/primary_scaffold_selected_003.jpg)
+- [Strong feature pack](docs/cases/feature_driven_ai_assembly_20260611/assets/strong_feature_reference_pack.jpg)
+- [Review sheet](docs/cases/feature_driven_ai_assembly_20260611/assets/feature_pack_vs_result_review_clear.png)
+
+## Documentation
+
+- [Implementation approach](docs/implementation_approach.md)
+- [Generated result prompt record](docs/result_feature_driven_flow.md)
+- [Case notes](docs/cases/feature_driven_ai_assembly_20260611/README.md)
+- [Project skill](skills/video-face-reference-builder/SKILL.md)
+
+## Run
 
 ```bash
 .venv/bin/python -m pytest -q
-```
-
-## 运行当前案例
-
-案例视频放在本地 `案例/` 目录中。该目录体积较大，不提交到 Git。
-
-```bash
 .venv/bin/python scripts/run_case.py
-```
-
-输出目录：
-
-```text
-outputs/<run_id>/
-  video_info.json
-  frames/
-  frame_scores.json
-  best_frames/
-  reference_boards/
-  report.md
-```
-
-## 第一版边界
-
-当前版本只完成基础证据整理流程：视频信息、抽帧、质量评分、最佳帧、参考板和报告。
-
-尚未实现：
-
-- 人脸关键点检测
-- 嘴部/人中/鼻部区域裁切
-- 脸型轮廓估计
-- 近距离透视/镜头畸变校正
-- CodeFormer/GFPGAN 可选增强对照自动调用
-- 候选完整脸局部校正
-
-### Candidate 04 AI 复合记录
-
-当前案例的完整脸候选 04 使用“强特征包驱动”流程：先从局部切片中挑出嘴、鼻、人中、眼、脸型等强参考，拼成 feature pack，再通过 `imagegen` skill 生成完整脸候选。
-
-复现记录和完整 prompt：
-
-```text
-docs/candidate_04_feature_driven_flow.md
-```
-
-重建强特征包：
-
-```bash
+.venv/bin/python scripts/run_keyframe_selection.py
 .venv/bin/python scripts/build_strong_feature_reference_pack_case.py
 ```
+
+Local videos, generated outputs, model weights, and `.venv/` are not committed.
