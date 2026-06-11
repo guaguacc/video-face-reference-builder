@@ -1,56 +1,77 @@
 ---
 name: video-face-reference-builder
-description: Use when building traceable face-reference assets from a difficult partial-face video. Covers full-video keyframe sweep, optional CodeFormer reference handling, AI-curated local face crops, strong feature-pack construction, and imagegen-based generated result assembly.
+description: Use when building traceable face-reference assets from a difficult partial-face video. Covers full-video keyframe discovery, deterministic frame scoring, optional CodeFormer/GFPGAN references, AI-curated local face crops, strong feature-pack construction, and imagegen-based full-face review result generation.
 ---
 
 # Video Face Reference Builder
 
 ## Purpose
 
-Select face-reference keyframes from a difficult video where no single frame contains a complete, clean face.
+Build a traceable face-reference package from a difficult video where no single frame contains a complete clean face.
 
-This skill replaces manual review with an AI-assisted workflow. It must not hard-code known good timestamps from a prior case. It must search the full video first, then refine promising time windows.
+This skill is not only a keyframe selector. Keyframe selection is the first stage. The complete implemented method is:
 
-It also records the repo workflow for creating a feature-driven generated full-face result from selected keyframes. For the detailed generated-result sequence and prompt, read:
+```text
+video
+-> global frame sampling
+-> deterministic frame scoring
+-> contact sheets
+-> AI-assisted keyframe review
+-> dense sampling around useful windows
+-> selected original keyframes
+-> optional CodeFormer/GFPGAN reference comparison
+-> AI-curated local face crops
+-> strong feature reference pack
+-> imagegen full-face review result
+-> review sheet
+```
+
+Generated full-face images are review artifacts, not ground truth. The evidence baseline is always original video frames.
+
+## Required References
+
+For the detailed implementation approach, read:
+
+```text
+../../docs/implementation_approach.md
+```
+
+For the generated-result prompt and exact case reproduction notes, read:
 
 ```text
 references/feature_driven_assembly.md
 ```
 
-## Core Rule
+## Core Rules
 
-Never start from a fixed time window alone.
-
-Always run:
-
-```text
-global sweep -> candidate scoring -> temporal clustering -> local window refinement -> final diverse keyframe set
-```
-
-The final output should include both:
-
-- globally discovered candidate frames
-- refined frames from high-value windows around those candidates
-
-Generated full-face results must not replace video evidence. Treat them as AI-inferred result artifacts with traceable inputs.
+- Search the whole video before refining any window.
+- Do not hard-code case timestamps, face features, or old manually selected frames.
+- Keep original selected keyframes as primary evidence.
+- Treat CodeFormer/GFPGAN outputs as auxiliary references only.
+- Build a small strong feature pack before image generation; large contact sheets are weak generation references.
+- Use the most complete original keyframe as the scaffold, never an AI-generated full face.
+- Do not use OpenCV stitching for the final generated result. OpenCV is used for video/frame IO and deterministic scoring.
+- Mark missing regions as AI-inferred.
 
 ## Inputs
 
 - source video path
 - output directory
-- target use: face reference, mouth reference, face shape, or general person identity reference
-- optional budget:
-  - max global preview frames
-  - max refined windows
-  - frames per refined window
+- optional sampling budget:
+  - global sampling interval
+  - max global candidates
+  - refined window count
+  - refined sampling interval
   - final keyframe count
+- optional CodeFormer/GFPGAN outputs
+- AI visual review notes or JSON when available
 
-## Outputs
+## Main Outputs
 
-Create:
+Keyframe selection:
 
 ```text
-keyframe_selection/
+outputs/keyframe_selection_case/
   global_candidates/
   refined_windows/
   selected_keyframes/
@@ -59,34 +80,40 @@ keyframe_selection/
   keyframe_selection.md
 ```
 
-For generated result workflows, also create:
+Local references:
 
 ```text
-candidate_guided_composite/
-  ai_assembly_round_01/
-    strong_feature_reference_pack.jpg
-    result_feature_driven.png
-    feature_pack_vs_result_review_clear.png
+outputs/keyframe_selection_case/local_reference/
+  ai_curated_crops/
+  boards/
 ```
 
-The report must include:
+Generated review result:
 
-- video duration, fps, frame count
-- global sampling strategy
-- candidate timestamps
-- selected refinement windows
-- final selected timestamps
-- why each final keyframe was selected
-- what face evidence it contains
-- which parts are uncertain or unusable
+```text
+outputs/keyframe_selection_case/candidate_guided_composite/ai_assembly_round_01/
+  strong_feature_reference_pack.jpg
+  result_feature_driven.png
+  feature_pack_vs_result_review_clear.png
+```
 
 ## Workflow
 
-### 1. Global Sweep
+### 1. Video Metadata
 
-Sample the entire video at a coarse but coverage-preserving interval.
+Use OpenCV to read fps, dimensions, frame count, duration, and codec information.
 
-Recommended default:
+Code:
+
+```text
+src/vfrb/video_info.py
+```
+
+### 2. Global Frame Sampling
+
+Sample the full video by time, not by a fixed known window.
+
+Recommended defaults:
 
 ```text
 duration <= 60s: every 0.5s to 1.0s
@@ -94,81 +121,65 @@ duration 60s-5min: every 1.0s to 2.0s
 duration > 5min: every 2.0s to 5.0s, then adaptively refine
 ```
 
-Do not use a single fixed frame interval such as every 30 frames unless it is converted from a time-based sampling decision.
-
-Save global candidates with timestamped names:
+Code:
 
 ```text
-global_candidates/t_00038.500.jpg
+src/vfrb/extract_frames.py
+src/vfrb/keyframe_selection.py
 ```
 
-### 2. Automated Frame Scoring
+### 3. Deterministic Frame Scoring
 
-For each global candidate, compute deterministic scores:
+Compute stable quality signals:
 
-- sharpness: Laplacian variance
+- sharpness via Laplacian variance
 - brightness balance
 - exposure clipping
-- motion blur proxy
 - center-region detail
-- skin-tone area proxy
-- face/partial-face detector confidence when available
-- non-duplicate score against nearby frames
+- non-duplicate score where available
 
-Do not rank by full-image sharpness alone. Full-image sharpness often favors background edges, subtitles, hands, or high-contrast artifacts instead of useful face evidence.
+Do not rank by full-image sharpness alone. It can favor hands, subtitles, background edges, or compression artifacts.
 
-### 3. AI Visual Judging
+Code:
 
-Build contact sheets from global candidates.
+```text
+src/vfrb/score_frames.py
+```
 
-Ask a vision-capable model to judge each candidate for face-reference value. The prompt should ask for structured output:
+### 4. Contact Sheets
+
+Build visual review sheets for global candidates, refined candidates, and selected keyframes.
+
+Code:
+
+```text
+src/vfrb/build_reference_boards.py
+src/vfrb/keyframe_selection.py
+```
+
+### 5. AI-Assisted Review
+
+Ask a vision-capable model to judge each candidate for face-reference value.
+
+Expected structured fields:
 
 ```json
 {
   "timestamp": 38.5,
-  "face_reference_value": 0,
+  "face_reference_value": 85,
   "visible_regions": ["mouth", "philtrum", "nose"],
-  "problems": ["motion_blur", "cropped_face"],
-  "reason": "Upper lip and philtrum visible with usable shading."
+  "problems": ["partial_face", "minor_motion_blur"],
+  "reason": "Visible local face evidence with usable shading."
 }
 ```
 
-Use AI judgment as one signal, not the only signal. Preserve deterministic scores in the report.
+AI review is one signal. Keep deterministic scores in the report.
 
-### 4. Temporal Clustering
+### 6. Temporal Refinement
 
-Group high-scoring global candidates into time windows.
+Cluster high-value global candidates into time windows, then resample densely inside those windows.
 
-Example:
-
-```text
-38.0s, 38.5s, 39.0s, 39.5s -> window 37.5s-40.0s
-48.0s, 48.5s, 49.0s, 49.5s, 50.0s -> window 47.5s-50.5s
-```
-
-Windows are discovered from global evidence. They are not assumed before global search.
-
-Keep at least a few singleton candidates outside the top windows if they contain distinct face evidence, such as side face, jawline, forehead, or skin tone.
-
-### 5. Local Window Refinement
-
-For each selected window, resample more densely by time.
-
-Recommended default:
-
-```text
-0.1s to 0.25s step inside the window
-```
-
-Then rescore and ask the AI judge again on local contact sheets.
-
-Local refinement should improve frame choice within a discovered window; it must not erase the global search results.
-
-### 6. Diversity Selection
-
-Final keyframes should cover different evidence, not just the highest total score.
-
-Prefer a diverse set:
+The final selected keyframes should cover diverse evidence:
 
 - mouth / philtrum
 - nose / nasolabial area
@@ -176,136 +187,111 @@ Prefer a diverse set:
 - cheek / skin tone
 - jawline / chin
 - face width or side contour
-- best overall identity reference
 
-If a region has no usable evidence, mark it missing.
+### 7. Optional Enhancement References
 
-### 7. Final Report
+Run CodeFormer/GFPGAN only after final original keyframes are selected.
 
-Write `keyframe_selection.md` with:
+Command:
 
-- selected frames table
-- timestamp
-- source stage: global or refined
-- visible regions
-- score summary
-- AI reason
-- deterministic score summary
-- limitations
-
-The report must state when the final frames came from a globally discovered window, and when they came from non-window singleton candidates.
-
-## After Keyframe Selection: Feature-Driven Generated Result
-
-Use this only after keyframe selection is complete.
-
-Required order:
-
-```text
-selected original keyframes
--> optional CodeFormer/GFPGAN auxiliary reference
--> AI-curated local crops and crop boards
--> strong feature reference pack
--> imagegen generated result
--> review sheet
+```bash
+.venv/bin/python scripts/summarize_codeformer_case.py
 ```
 
-Rules:
+Enhanced outputs do not replace original keyframes.
 
-- The scaffold must be the most complete original keyframe, not an AI-generated full face.
-- CodeFormer outputs are auxiliary references only; keep all original selected keyframes.
-- Large contact sheets are weak as imagegen references. Build a small hard-reference feature pack from local slices.
-- OpenCV is part of the base keyframe pipeline for video/frame IO and deterministic scoring. Do not add non-main experiment steps to the generated-result reproduction path.
-- The generated result was created by `imagegen` from the original scaffold and strong feature pack; it was not assembled by OpenCV.
-- Preserve uncertainty: mouth/nose/philtrum can be tied to slices; missing eye, hair, full face outline, and complete symmetry are AI-inferred.
+### 8. AI-Curated Local Crops
 
-When asked to reproduce the current generated-result flow, load `references/feature_driven_assembly.md` and follow its commands and prompt.
+Build local references for face components.
+
+Commands:
+
+```bash
+.venv/bin/python scripts/build_local_reference_case.py
+.venv/bin/python scripts/build_ai_curated_crops_case.py
+```
+
+Regions:
+
+- face shape
+- eye
+- nose
+- philtrum
+- mouth
+- cheek/skin
+
+Crop metadata should preserve source frame, region, bbox, quality notes, and offset where available.
+
+### 9. Strong Feature Pack
+
+Build the compact evidence board used for image generation.
+
+Command:
+
+```bash
+.venv/bin/python scripts/build_strong_feature_reference_pack_case.py
+```
+
+Output:
+
+```text
+outputs/keyframe_selection_case/candidate_guided_composite/ai_assembly_round_01/strong_feature_reference_pack.jpg
+```
+
+### 10. Imagegen Full-Face Review Result
+
+Use `imagegen` with:
+
+- the strong feature reference pack as local organ evidence
+- the most complete original keyframe as layout scaffold
+
+The prompt must constrain mouth, nose, philtrum, eyes, cheeks, skin tone, close-camera perspective, and video softness.
+
+Do not ask imagegen for a clean beauty portrait. Ask for a review result that visibly follows the feature pack.
+
+Full prompt record:
+
+```text
+references/feature_driven_assembly.md
+```
+
+### 11. Review Sheet
+
+Create or keep a side-by-side review sheet comparing:
+
+- left: feature/reference components
+- right: generated review result
+
+GitHub case overview:
+
+```text
+docs/cases/feature_driven_ai_assembly_20260611/assets/feature_result_overview.png
+```
+
+## Run Commands
+
+```bash
+.venv/bin/python -m pytest -q
+.venv/bin/python scripts/run_case.py
+.venv/bin/python scripts/run_keyframe_selection.py
+.venv/bin/python scripts/build_strong_feature_reference_pack_case.py
+```
+
+## Case Assets
+
+```text
+docs/cases/feature_driven_ai_assembly_20260611/
+  assets/feature_result_overview.png
+  assets/selected_keyframes.jpg
+  assets/primary_scaffold_selected_003.jpg
+  assets/strong_feature_reference_pack.jpg
+  assets/result_feature_driven.png
+  assets/feature_pack_vs_result_review_clear.png
+```
 
 ## Failure Modes
 
-If AI and deterministic scoring disagree, keep both candidates and flag the disagreement.
-
-If no useful face regions are found globally, stop and report that the video lacks usable evidence instead of forcing a fake selection.
-
-If the best windows are all near one short segment, keep some lower-ranked global candidates from other segments for context unless they are visually unusable.
-
-## Case Benchmark Guidance
-
-For the existing example case, the old manually selected frames around `38s-39.5s` and `48s-50s` may be used only as benchmark references.
-
-Do not hard-code those timestamps into the selection logic.
-
-The algorithm should be evaluated by whether it discovers those windows, or finds better evidence elsewhere in the full video.
-
-## Worked Benchmark: Current Face Video Case
-
-Use this benchmark to calibrate behavior, not to constrain future videos.
-
-### What happened manually
-
-In the current project case, manual review first looked across the full video, then selected two high-value time regions:
-
-```text
-38.0s, 38.5s, 39.0s, 39.5s
-48.0s, 48.5s, 49.0s, 49.5s, 50.0s
-```
-
-These were not model-selected timestamps. They were manually chosen after visual global review, then extracted by script and enhanced with CodeFormer.
-
-### Why those frames were useful
-
-The useful evidence was local, not full-face:
-
-- `38.0s-40.0s`: cheek, mouth, lower nose, philtrum, near-face color
-- `47.0s-49.0s`: nose, philtrum, mouth area, cheek, eye-side context
-- `48.0s-48.5s`: strongest local reference for philtrum/nose/mouth shading
-
-The frames are still imperfect:
-
-- close perspective distortion
-- partial face only
-- motion blur
-- no complete face shape
-- CodeFormer detects only some frames because the face is heavily cropped
-
-### What a good automatic run should do
-
-A good run on this case should:
-
-- sample the whole video first
-- produce full timeline contact sheets, not only top-score sheets
-- avoid selecting early hand-occlusion frames just because they have high edge sharpness
-- identify windows near `38s-40s` and `47s-50s` from global evidence
-- keep secondary candidates only if they add distinct evidence, such as mouth, cheek, glasses, or side contour
-- run CodeFormer only after candidate selection
-- record CodeFormer failures instead of hiding them
-
-### What a bad automatic run looks like
-
-This case exposed several failure modes:
-
-- Ranking only by full-image sharpness selected early `0s-19s` frames where the arm occluded the face.
-- Building contact sheets only from algorithm top frames hid useful later windows.
-- Selecting windows by chronological order caused early weak windows to displace better later windows.
-- Giving unlabeled frames a neutral AI score allowed occluded frames to survive final selection.
-
-The skill should avoid these failures by:
-
-- generating timeline contact sheets for global AI review
-- letting AI reference-value scores affect window ranking
-- ranking windows by candidate score, not chronological order
-- lowering default AI score for unlabeled candidates when an AI judgement file is being used
-
-### CodeFormer behavior in this case
-
-On the selected local-face candidates, CodeFormer detected faces in only a small subset of frames.
-
-This is expected for very close, partial, or cropped faces. The pipeline should treat CodeFormer output as an enhancement attempt, not proof that the frame is valid.
-
-Reports should include:
-
-- number of frames sent to CodeFormer
-- number of detected/restored faces
-- frames with no detected face
-- original-to-enhanced mapping
-- warning when most candidates are partial-face crops
+- If global search finds no useful face evidence, stop and report insufficient evidence.
+- If AI and deterministic scoring disagree, keep both candidates and flag the disagreement.
+- If all selected frames cluster around one short segment, preserve lower-ranked frames from other segments when they contain distinct evidence.
+- If generated output ignores the feature pack, rebuild a smaller stronger feature pack or use localized masked edits instead of accepting the result.

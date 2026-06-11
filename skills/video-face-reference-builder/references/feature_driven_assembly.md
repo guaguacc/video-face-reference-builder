@@ -1,6 +1,6 @@
-# Feature-Driven Full-Face Result Workflow
+# Feature-Driven Full-Face Result Reference
 
-Use this reference when the user asks to reproduce the generated result flow from GitHub.
+Use this reference from the `video-face-reference-builder` skill when reproducing the generated result from GitHub.
 
 ## Preconditions
 
